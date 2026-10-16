@@ -27,6 +27,7 @@ enum MosScrolling {
         var dash: Scheme.Scrolling.Mos.Key
         var toggle: Scheme.Scrolling.Mos.Key
         var block: Scheme.Scrolling.Mos.Key
+        var blockLines: Int?
 
         init(_ mos: Scheme.Scrolling.Mos) {
             step = mos.resolvedStep
@@ -35,6 +36,7 @@ enum MosScrolling {
             dash = mos.resolvedDash
             toggle = mos.resolvedToggle
             block = mos.resolvedBlock
+            blockLines = mos.resolvedBlockLines
         }
     }
 
@@ -163,8 +165,16 @@ enum MosScrollingSessionTap {
         let hasVerticalDelta = y != 0
         let hasHorizontalDelta = x != 0
 
-        // Mos' "block" key turns smoothing off; the wheel event passes through untouched.
-        guard !blockSmooth, hasVerticalDelta || hasHorizontalDelta else {
+        guard hasVerticalDelta || hasHorizontalDelta else {
+            return event
+        }
+
+        // Mos' "block" key turns smoothing off. The wheel event passes through, optionally scrolling
+        // a fixed number of lines per notch (as DiscreteScroll does) instead of accelerating.
+        if blockSmooth {
+            if let lines = configuration.blockLines {
+                Self.scrollByLines(event, lines: lines, vertical: y, horizontal: x)
+            }
             return event
         }
 
@@ -189,6 +199,20 @@ enum MosScrollingSessionTap {
 
     enum Axis {
         case vertical, horizontal
+    }
+
+    /// DiscreteScroll: replace the line delta of a notched wheel event with a fixed count in the same
+    /// direction. Setting the line delta makes macOS recompute the point deltas.
+    static func scrollByLines(_ event: CGEvent, lines: Int, vertical: Double, horizontal: Double) {
+        guard event.getIntegerValueField(.scrollWheelEventIsContinuous) == 0 else {
+            return
+        }
+        if vertical != 0 {
+            event.setIntegerValueField(.scrollWheelEventDeltaAxis1, value: vertical > 0 ? Int64(lines) : -Int64(lines))
+        }
+        if horizontal != 0 {
+            event.setIntegerValueField(.scrollWheelEventDeltaAxis2, value: horizontal > 0 ? Int64(lines) : -Int64(lines))
+        }
     }
 
     /// Mos' `ScrollEvent.initEvent`: prefer the point delta, then the fixed-point delta, then lines.

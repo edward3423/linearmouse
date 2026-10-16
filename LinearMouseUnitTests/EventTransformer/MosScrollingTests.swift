@@ -191,6 +191,58 @@ final class MosScrollingTests: XCTestCase {
         XCTAssertNil(MosScrolling.Key(event))
     }
 
+    // MARK: - Block key
+
+    private func blockedWheelEvent(lines: Int32, continuous: Bool = false) throws -> CGEvent {
+        let event = try XCTUnwrap(CGEvent(
+            scrollWheelEvent2Source: nil,
+            units: .line,
+            wheelCount: 2,
+            wheel1: lines,
+            wheel2: 0,
+            wheel3: 0
+        ))
+        event.setIntegerValueField(.scrollWheelEventIsContinuous, value: continuous ? 1 : 0)
+        // Left Command: the default block key.
+        event.flags = CGEventFlags(rawValue: CGEventFlags.maskCommand.rawValue | 0x08)
+        event.timestamp = mach_absolute_time()
+        return event
+    }
+
+    func testBlockKeyScrollsFixedLinesWhenEnabled() throws {
+        let event = try blockedWheelEvent(lines: -7)
+        MosScrolling.mark(event, with: .init(.init(enabled: true, blockByLines: true, blockLines: 2)))
+
+        let result = try XCTUnwrap(MosScrollingSessionTap.handle(event))
+
+        XCTAssertTrue(result === event, "blocked events pass through instead of being smoothed")
+        XCTAssertEqual(result.getIntegerValueField(.scrollWheelEventDeltaAxis1), -2)
+    }
+
+    func testBlockKeyPassesEventThroughUnchangedByDefault() throws {
+        let event = try blockedWheelEvent(lines: -7)
+        MosScrolling.mark(event, with: .init(.init(enabled: true)))
+
+        let result = try XCTUnwrap(MosScrollingSessionTap.handle(event))
+
+        XCTAssertEqual(result.getIntegerValueField(.scrollWheelEventDeltaAxis1), -7)
+    }
+
+    func testBlockKeyLeavesContinuousScrollingAlone() throws {
+        let event = try blockedWheelEvent(lines: -7, continuous: true)
+        MosScrolling.mark(event, with: .init(.init(enabled: true, blockByLines: true, blockLines: 2)))
+
+        let result = try XCTUnwrap(MosScrollingSessionTap.handle(event))
+
+        XCTAssertEqual(result.getIntegerValueField(.scrollWheelEventDeltaAxis1), -7)
+    }
+
+    func testBlockLinesAreOffByDefaultAndClamped() {
+        XCTAssertNil(Scheme.Scrolling.Mos(enabled: true).resolvedBlockLines)
+        XCTAssertEqual(Scheme.Scrolling.Mos(blockByLines: true).resolvedBlockLines, 3)
+        XCTAssertEqual(Scheme.Scrolling.Mos(blockByLines: true, blockLines: 50).resolvedBlockLines, 10)
+    }
+
     // MARK: - Frames
 
     /// Regression: `eventSourceUserData` can only be written once per event. Frames must still be

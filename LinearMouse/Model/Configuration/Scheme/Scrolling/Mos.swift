@@ -25,6 +25,10 @@ extension Scheme.Scrolling {
         var dash: Key?
         var toggle: Key?
         var block: Key?
+        /// While the block key is held, scroll a fixed number of lines per wheel notch instead of
+        /// passing the (accelerated) wheel event through.
+        var blockByLines: Bool?
+        var blockLines: Int?
 
         init() {}
 
@@ -35,7 +39,9 @@ extension Scheme.Scrolling {
             duration: Decimal? = nil,
             dash: Key? = nil,
             toggle: Key? = nil,
-            block: Key? = nil
+            block: Key? = nil,
+            blockByLines: Bool? = nil,
+            blockLines: Int? = nil
         ) {
             self.enabled = enabled
             self.step = step
@@ -44,6 +50,8 @@ extension Scheme.Scrolling {
             self.dash = dash
             self.toggle = toggle
             self.block = block
+            self.blockByLines = blockByLines
+            self.blockLines = blockLines
         }
     }
 }
@@ -56,6 +64,8 @@ extension Scheme.Scrolling.Mos {
     static let stepRange: ClosedRange<Double> = 0.01 ... 100
     static let speedRange: ClosedRange<Double> = 0.01 ... 10
     static let durationRange: ClosedRange<Double> = 0 ... 5
+    static let defaultBlockLines = 3
+    static let blockLinesRange: ClosedRange<Int> = 1 ... 10
 
     var isEnabled: Bool {
         enabled ?? false
@@ -98,6 +108,14 @@ extension Scheme.Scrolling.Mos {
         block ?? .leftCommand
     }
 
+    /// Lines per wheel notch while the block key is held, or `nil` to pass the wheel event through.
+    var resolvedBlockLines: Int? {
+        guard blockByLines ?? false else {
+            return nil
+        }
+        return (blockLines ?? Self.defaultBlockLines).clamped(to: Self.blockLinesRange)
+    }
+
     func merge(into mos: inout Self) {
         if let enabled {
             mos.enabled = enabled
@@ -119,6 +137,12 @@ extension Scheme.Scrolling.Mos {
         }
         if let block {
             mos.block = block
+        }
+        if let blockByLines {
+            mos.blockByLines = blockByLines
+        }
+        if let blockLines {
+            mos.blockLines = blockLines
         }
     }
 

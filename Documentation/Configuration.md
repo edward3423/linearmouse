@@ -147,6 +147,9 @@ For example, Mos scrolling for mice with scroll-by-lines input, and plain 3-line
 }
 ```
 
+Holding `block` turns smoothing off. Set `blockByLines` to `true` to scroll a fixed `blockLines`
+lines per wheel notch (default 3) while it is held, instead of the system's accelerated scrolling.
+
 `dash`, `toggle` and `block` accept `none`, `option`, `shift`, `command`, `control`, or a
 `left`/`right` variant such as `leftOption`. They default to Mos' left Option, left Shift and left
 Command.

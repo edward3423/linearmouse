@@ -1921,6 +1921,18 @@
           "default": "leftCommand",
           "description": "Hold to scroll without smoothing (Mos \"Block Key\")."
         },
+        "blockByLines": {
+          "default": false,
+          "description": "While the block key is held, scroll a fixed number of lines per wheel notch\ninstead of passing the accelerated wheel event through.",
+          "type": "boolean"
+        },
+        "blockLines": {
+          "default": 3,
+          "description": "Lines per wheel notch while the block key is held, when `blockByLines` is on.",
+          "maximum": 10,
+          "minimum": 1,
+          "type": "number"
+        },
         "dash": {
           "$ref": "#/definitions/Scheme.Scrolling.Mos.Key",
           "default": "leftOption",

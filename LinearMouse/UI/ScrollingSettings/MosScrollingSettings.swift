@@ -66,6 +66,30 @@ extension ScrollingSettings {
                     selection: $state.mosBlock
                 )
 
+                if state.mosBlock != .none {
+                    Toggle(isOn: $state.mosBlockByLines) {
+                        withDescription {
+                            Text("Scroll by lines while blocked")
+                            Text("While the block key is held, each wheel notch scrolls a fixed number of lines.")
+                        }
+                    }
+
+                    if state.mosBlockByLines {
+                        Slider(
+                            value: $state.mosBlockLines,
+                            in: Double(Scheme.Scrolling.Mos.blockLinesRange.lowerBound) ...
+                                Double(Scheme.Scrolling.Mos.blockLinesRange.upperBound),
+                            step: 1
+                        ) {
+                            Text("Lines")
+                        } minimumValueLabel: {
+                            Text(verbatim: "\(Scheme.Scrolling.Mos.blockLinesRange.lowerBound)")
+                        } maximumValueLabel: {
+                            Text(verbatim: "\(Scheme.Scrolling.Mos.blockLinesRange.upperBound)")
+                        }
+                    }
+                }
+
                 Button("Revert to Mos defaults") {
                     state.revertMosToDefaults()
                 }

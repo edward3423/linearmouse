@@ -563,6 +563,18 @@ extension ScrollingSettingsState {
         set { scheme.scrolling.mos.block = newValue }
     }
 
+    var mosBlockByLines: Bool {
+        get { mergedScheme.scrolling.mos.resolvedBlockLines != nil }
+        set { scheme.scrolling.mos.blockByLines = newValue }
+    }
+
+    var mosBlockLines: Double {
+        get {
+            Double(mergedScheme.scrolling.mos.resolvedBlockLines ?? Scheme.Scrolling.Mos.defaultBlockLines)
+        }
+        set { scheme.scrolling.mos.blockLines = Int(newValue) }
+    }
+
     var mosFormatter: NumberFormatter {
         decimalFormatter(maxFractionDigits: 2)
     }
@@ -574,5 +586,7 @@ extension ScrollingSettingsState {
         scheme.scrolling.mos.dash = nil
         scheme.scrolling.mos.toggle = nil
         scheme.scrolling.mos.block = nil
+        scheme.scrolling.mos.blockByLines = nil
+        scheme.scrolling.mos.blockLines = nil
     }
 }

@@ -356,6 +356,21 @@ declare namespace Scheme {
        * @default "leftCommand"
        */
       block?: Mos.Key;
+
+      /**
+       * @description While the block key is held, scroll a fixed number of lines per wheel notch
+       * instead of passing the accelerated wheel event through.
+       * @default false
+       */
+      blockByLines?: boolean;
+
+      /**
+       * @description Lines per wheel notch while the block key is held, when `blockByLines` is on.
+       * @minimum 1
+       * @maximum 10
+       * @default 3
+       */
+      blockLines?: number;
     };
 
     namespace Mos {
