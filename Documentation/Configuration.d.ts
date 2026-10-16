@@ -214,6 +214,12 @@ declare namespace Scheme {
      * @title Modifier keys settings
      */
     modifiers?: Scrolling.Bidirectional<Scrolling.Modifiers>;
+
+    /**
+     * @title Mos scrolling
+     * @description Smooth scrolling that reproduces Mos exactly. Replaces `smoothed` when enabled.
+     */
+    mos?: Scrolling.Mos;
   };
 
   namespace Scrolling {
@@ -300,6 +306,73 @@ declare namespace Scheme {
         | "easeOutQuartic"
         | "easeInOutQuartic"
         | "smooth";
+    }
+
+    type Mos = {
+      /**
+       * @description Enable Mos scrolling.
+       * @default false
+       */
+      enabled?: boolean;
+
+      /**
+       * @description The minimum distance of one wheel event, in pixels (Mos "Step").
+       * @minimum 0.01
+       * @maximum 100
+       * @default 33.6
+       */
+      step?: number;
+
+      /**
+       * @description Multiplies the distance of each wheel event (Mos "Speed").
+       * @minimum 0.01
+       * @maximum 10
+       * @default 2.7
+       */
+      speed?: number;
+
+      /**
+       * @description How long each scroll animates (Mos "Duration"). Higher is slower.
+       * @minimum 0
+       * @maximum 5
+       * @default 4.35
+       */
+      duration?: number;
+
+      /**
+       * @description Hold to scroll 5 times as far (Mos "Dash Key").
+       * @default "leftOption"
+       */
+      dash?: Mos.Key;
+
+      /**
+       * @description Hold to turn vertical scrolling horizontal (Mos "Toggle Key").
+       * @default "leftShift"
+       */
+      toggle?: Mos.Key;
+
+      /**
+       * @description Hold to scroll without smoothing (Mos "Block Key").
+       * @default "leftCommand"
+       */
+      block?: Mos.Key;
+    };
+
+    namespace Mos {
+      type Key =
+        | "none"
+        | "option"
+        | "leftOption"
+        | "rightOption"
+        | "shift"
+        | "leftShift"
+        | "rightShift"
+        | "command"
+        | "leftCommand"
+        | "rightCommand"
+        | "control"
+        | "leftControl"
+        | "rightControl";
     }
 
     type Modifiers = {

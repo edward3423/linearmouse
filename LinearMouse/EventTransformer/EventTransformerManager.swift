@@ -854,10 +854,13 @@ class EventTransformerManager {
             }
         }
 
+        // Mos scrolling replaces LinearMouse's own smoothing so wheel events are never smoothed twice.
+        let usesMosScrolling = scheme.scrolling.mos.isEnabled
         let smoothed = Scheme.Scrolling.Bidirectional(
-            vertical: scheme.scrolling.smoothed.vertical?.isEnabled == true ? scheme.scrolling.smoothed.vertical : nil,
-            horizontal: scheme.scrolling.smoothed.horizontal?.isEnabled == true ? scheme.scrolling.smoothed
-                .horizontal : nil
+            vertical: !usesMosScrolling && scheme.scrolling.smoothed.vertical?.isEnabled == true
+                ? scheme.scrolling.smoothed.vertical : nil,
+            horizontal: !usesMosScrolling && scheme.scrolling.smoothed.horizontal?.isEnabled == true
+                ? scheme.scrolling.smoothed.horizontal : nil
         )
         let hasSmoothedScrolling = smoothed.vertical != nil || smoothed.horizontal != nil
         let buttonMappings = (scheme.buttons.mappings ?? []).map { mapping in
@@ -1033,6 +1036,11 @@ class EventTransformerManager {
         if let redirectsToScroll = scheme.pointer.redirectsToScroll, redirectsToScroll,
            scheme.pointer.redirectsToScrollTrigger == nil {
             eventTransformer.append(PointerRedirectsToScrollTransformer(redirect: redirectPointerToScroll))
+        }
+
+        // Last, so Mos sees the wheel event after every other LinearMouse adjustment.
+        if usesMosScrolling {
+            eventTransformer.append(MosScrollingMarkTransformer(mos: scheme.scrolling.mos))
         }
 
         let route = TransformerRoute(transformer: eventTransformer)

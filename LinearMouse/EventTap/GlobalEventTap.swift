@@ -13,6 +13,7 @@ class GlobalEventTap {
 
     private var observationToken: ObservationToken?
     private var motionObservationToken: ObservationToken?
+    private var mosScrollingObservationToken: ObservationToken?
     private let motionControl = EventTap.Control(isEnabled: false)
     private lazy var watchdog = GlobalEventTapWatchdog()
 
@@ -141,7 +142,15 @@ class GlobalEventTap {
                 let token = try EventTap.observe(eventTypes, onInvalidated: onInvalidated) { [weak self] in
                     self?.callback($1)
                 }
-                return (token, motionToken)
+                // Mos scrolling runs where Mos itself does: at the end of the annotated session tap,
+                // after macOS has resolved which process the wheel event targets.
+                let mosScrollingToken = try EventTap.observe(
+                    MosScrollingSessionTap.eventTypes,
+                    location: .cgAnnotatedSessionEventTap,
+                    place: .tailAppendEventTap,
+                    onInvalidated: onInvalidated
+                ) { MosScrollingSessionTap.handle($1) }
+                return (token, motionToken, mosScrollingToken)
             }
         }) else {
             eventThread.stop()
@@ -149,9 +158,11 @@ class GlobalEventTap {
         }
 
         switch observationResult {
-        case let .success((token, motionToken)):
+        case let .success((token, motionToken, mosScrollingToken)):
             observationToken = token
             motionObservationToken = motionToken
+            mosScrollingObservationToken = mosScrollingToken
+            MosScrollPoster.shared.activate()
         case let .failure(error):
             eventThread.stop()
             os_log("Failed to create event tap: %{public}@", log: Self.log, type: .error, String(describing: error))
@@ -175,6 +186,8 @@ class GlobalEventTap {
         // to the event RunLoop (see EventTap.observe).
         observationToken = nil
         motionObservationToken = nil
+        mosScrollingObservationToken = nil
+        MosScrollPoster.shared.deactivate()
 
         // EventThread.stop() fires onWillStop (which calls resetForRestart)
         // then stops the RunLoop, all in FIFO order.

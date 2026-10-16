@@ -91,6 +91,7 @@ extension EventTap {
      */
     static func observe(
         _ events: [CGEventType],
+        location: CGEventTapLocation = .cghidEventTap,
         place: CGEventTapPlacement = .headInsertEventTap,
         at runLoop: RunLoop = .current,
         onInvalidated: (() -> Void)? = nil,
@@ -103,7 +104,7 @@ extension EventTap {
         // Create event tap.
         let eventsOfInterest = events.reduce(CGEventMask(0)) { $0 | (1 << $1.rawValue) }
         guard let tap = CGEvent.tapCreate(
-            tap: .cghidEventTap,
+            tap: location,
             place: place,
             options: .defaultTap,
             eventsOfInterest: eventsOfInterest,

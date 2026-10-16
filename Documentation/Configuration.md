@@ -120,6 +120,37 @@ For example, to use a smoother scrolling profile for a mouse:
 If you want different tuning for each direction, provide `vertical` and `horizontal` values under
 `smoothed`.
 
+## Mos scrolling
+
+`scrolling.mos` reproduces the smooth scrolling of [Mos](https://github.com/Caldis/Mos) exactly: the
+same step, speed and duration settings, the same per-frame animation synced to the display, and the
+same dash, toggle and block keys. It runs after every other scrolling setting, so `distance`,
+`reverse` and app or device conditions still apply first. While it is enabled, `smoothed` is ignored.
+
+For example, Mos scrolling for mice with scroll-by-lines input, and plain 3-line scrolling in Parsec:
+
+```json
+{
+  "schemes": [
+    {
+      "if": { "device": { "category": "mouse" } },
+      "scrolling": {
+        "distance": { "vertical": 3 },
+        "mos": { "enabled": true, "step": 33.6, "speed": 2, "duration": 1 }
+      }
+    },
+    {
+      "if": { "app": "tv.parsec.www" },
+      "scrolling": { "mos": { "enabled": false } }
+    }
+  ]
+}
+```
+
+`dash`, `toggle` and `block` accept `none`, `option`, `shift`, `command`, `control`, or a
+`left`/`right` variant such as `leftOption`. They default to Mos' left Option, left Shift and left
+Command.
+
 ## Click debouncing
 
 `buttons.clickDebouncing` filters electrical chatter from worn or noisy mouse switches. Existing

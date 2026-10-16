@@ -181,6 +181,7 @@ extension ScrollingSettingsState {
         case smoothed = "Smoothed"
         case byLines = "By Lines"
         case byPixels = "By Pixels"
+        case mos = "Mos"
 
         var label: LocalizedStringKey {
             switch self {
@@ -188,12 +189,13 @@ extension ScrollingSettingsState {
             case .smoothed: "Smoothed (Beta)"
             case .byLines: "By Lines"
             case .byPixels: "By Pixels"
+            case .mos: "Mos"
             }
         }
 
         var sendsContinuousScrollEvents: Bool {
             switch self {
-            case .smoothed, .byPixels:
+            case .smoothed, .byPixels, .mos:
                 true
             case .accelerated, .byLines:
                 false
@@ -203,6 +205,10 @@ extension ScrollingSettingsState {
 
     var scrollingMode: ScrollingMode {
         get {
+            if mergedScheme.scrolling.mos.isEnabled {
+                return .mos
+            }
+
             if currentSmoothedConfiguration != nil {
                 return .smoothed
             }
@@ -217,7 +223,17 @@ extension ScrollingSettingsState {
             }
         }
         set {
+            // Mos smooths both directions, so entering or leaving it applies to both directions.
+            if newValue == .mos {
+                scheme.scrolling.mos.enabled = true
+            } else if mergedScheme.scrolling.mos.isEnabled {
+                scheme.scrolling.mos.enabled = false
+            }
+
             switch newValue {
+            case .mos:
+                // Keep the current wheel input (lines or system acceleration) as Mos' input.
+                clearSmoothedConfiguration()
             case .accelerated:
                 clearSmoothedConfiguration()
                 scheme.scrolling.distance[direction] = .auto
@@ -363,6 +379,8 @@ extension ScrollingSettingsState {
             return scrollingDistanceInLines == 0
         case .byPixels:
             return scrollingDistanceInPixels == 0
+        case .mos:
+            return false
         }
     }
 
@@ -376,7 +394,9 @@ extension ScrollingSettingsState {
     }
 
     var showsContinuousScrollShiftTip: Bool {
+        // Mos mode has its own toggle key for horizontal scrolling.
         direction == .vertical
+            && scrollingMode != .mos
             && scrollingMode.sendsContinuousScrollEvents
             && (modifiers.shift?.kind ?? .defaultAction) != .alterOrientation
     }
@@ -473,5 +493,86 @@ extension ScrollingSettingsState {
         formatter.maximumFractionDigits = maxFractionDigits
         formatter.thousandSeparator = ""
         return formatter
+    }
+}
+
+extension ScrollingSettingsState {
+    enum MosWheelInput: String, Identifiable, CaseIterable {
+        var id: Self {
+            self
+        }
+
+        case accelerated
+        case byLines
+
+        var label: LocalizedStringKey {
+            switch self {
+            case .accelerated: "Accelerated (Mos alone)"
+            case .byLines: "By Lines (LinearMouse + Mos)"
+            }
+        }
+    }
+
+    /// Mos smooths whatever wheel input it receives; this is the distance setting that runs first.
+    var mosWheelInput: MosWheelInput {
+        get {
+            if case .line = mergedScheme.scrolling.distance[direction] {
+                return .byLines
+            }
+            return .accelerated
+        }
+        set {
+            switch newValue {
+            case .accelerated:
+                scheme.scrolling.distance[direction] = .auto
+            case .byLines:
+                scheme.scrolling.distance[direction] = .line(3)
+            }
+            scheme.scrolling.acceleration[direction] = 1
+            scheme.scrolling.speed[direction] = 0
+        }
+    }
+
+    var mosStep: Double {
+        get { mergedScheme.scrolling.mos.resolvedStep }
+        set { scheme.scrolling.mos.step = Decimal(newValue).rounded(2) }
+    }
+
+    var mosSpeed: Double {
+        get { mergedScheme.scrolling.mos.resolvedSpeed }
+        set { scheme.scrolling.mos.speed = Decimal(newValue).rounded(2) }
+    }
+
+    var mosDuration: Double {
+        get { mergedScheme.scrolling.mos.resolvedDuration }
+        set { scheme.scrolling.mos.duration = Decimal(newValue).rounded(2) }
+    }
+
+    var mosDash: Scheme.Scrolling.Mos.Key {
+        get { mergedScheme.scrolling.mos.resolvedDash }
+        set { scheme.scrolling.mos.dash = newValue }
+    }
+
+    var mosToggle: Scheme.Scrolling.Mos.Key {
+        get { mergedScheme.scrolling.mos.resolvedToggle }
+        set { scheme.scrolling.mos.toggle = newValue }
+    }
+
+    var mosBlock: Scheme.Scrolling.Mos.Key {
+        get { mergedScheme.scrolling.mos.resolvedBlock }
+        set { scheme.scrolling.mos.block = newValue }
+    }
+
+    var mosFormatter: NumberFormatter {
+        decimalFormatter(maxFractionDigits: 2)
+    }
+
+    func revertMosToDefaults() {
+        scheme.scrolling.mos.step = nil
+        scheme.scrolling.mos.speed = nil
+        scheme.scrolling.mos.duration = nil
+        scheme.scrolling.mos.dash = nil
+        scheme.scrolling.mos.toggle = nil
+        scheme.scrolling.mos.block = nil
     }
 }

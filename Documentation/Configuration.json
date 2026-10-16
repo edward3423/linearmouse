@@ -1607,6 +1607,11 @@
           ],
           "title": "Modifier keys settings"
         },
+        "mos": {
+          "$ref": "#/definitions/Scheme.Scrolling.Mos",
+          "description": "Smooth scrolling that reproduces Mos exactly. Replaces `smoothed` when enabled.",
+          "title": "Mos scrolling"
+        },
         "reverse": {
           "anyOf": [
             {
@@ -1907,6 +1912,71 @@
         "type"
       ],
       "type": "object"
+    },
+    "Scheme.Scrolling.Mos": {
+      "additionalProperties": false,
+      "properties": {
+        "block": {
+          "$ref": "#/definitions/Scheme.Scrolling.Mos.Key",
+          "default": "leftCommand",
+          "description": "Hold to scroll without smoothing (Mos \"Block Key\")."
+        },
+        "dash": {
+          "$ref": "#/definitions/Scheme.Scrolling.Mos.Key",
+          "default": "leftOption",
+          "description": "Hold to scroll 5 times as far (Mos \"Dash Key\")."
+        },
+        "duration": {
+          "default": 4.35,
+          "description": "How long each scroll animates (Mos \"Duration\"). Higher is slower.",
+          "maximum": 5,
+          "minimum": 0,
+          "type": "number"
+        },
+        "enabled": {
+          "default": false,
+          "description": "Enable Mos scrolling.",
+          "type": "boolean"
+        },
+        "speed": {
+          "default": 2.7,
+          "description": "Multiplies the distance of each wheel event (Mos \"Speed\").",
+          "maximum": 10,
+          "minimum": 0.01,
+          "type": "number"
+        },
+        "step": {
+          "default": 33.6,
+          "description": "The minimum distance of one wheel event, in pixels (Mos \"Step\").",
+          "maximum": 100,
+          "minimum": 0.01,
+          "type": "number"
+        },
+        "toggle": {
+          "$ref": "#/definitions/Scheme.Scrolling.Mos.Key",
+          "default": "leftShift",
+          "description": "Hold to turn vertical scrolling horizontal (Mos \"Toggle Key\")."
+        }
+      },
+      "type": "object"
+    },
+    "Scheme.Scrolling.Mos.Key": {
+      "enum": [
+        "none",
+        "option",
+        "leftOption",
+        "rightOption",
+        "shift",
+        "leftShift",
+        "rightShift",
+        "command",
+        "leftCommand",
+        "rightCommand",
+        "control",
+        "leftControl",
+        "rightControl"
+      ],
+      "type": "string"
     },
     "Scheme.Scrolling.Smoothed": {
       "additionalProperties": false,
