@@ -4,5 +4,5 @@ VERSION=$(echo ${GITHUB_REF#refs/tags/v} | grep '^\d' || echo "sha-$(git rev-par
 
 pushd $(dirname "$0") > /dev/null
 cd ..
-echo "CURRENT_PROJECT_VERSION = $VERSION" >> Version.xcconfig
+echo "CURRENT_PROJECT_VERSION = $VERSION" > Version.xcconfig
 popd
